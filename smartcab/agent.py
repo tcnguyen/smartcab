@@ -25,7 +25,7 @@ class LearningAgent(Agent):
         ## TO DO ##
         ###########
         # Set any additional class parameters as needed
-        self.t = 0
+        self.trial = 0
 
 
     def reset(self, destination=None, testing=False):
@@ -45,11 +45,11 @@ class LearningAgent(Agent):
         if testing:
             self.epsilon = 0.
             self.alpha = 0.
-            self.t = 0
+            self.trial = 0
         else:
-            self.t += 1
-            a = 0.001
-            self.epsilon = math.exp(-a*self.t)
+            self.trial += 1
+            a = 0.05
+            self.epsilon = math.exp(-a*self.trial)
 
             #self.epsilon = 1./self.t**2
         return None
@@ -68,7 +68,7 @@ class LearningAgent(Agent):
         ## TO DO ##
         ###########
         # Set 'state' as a tuple of relevant data for the agent        
-        state = (waypoint, inputs['light'], inputs['oncoming'], inputs['left'], inputs['right'])
+        state = (waypoint, inputs['light'], inputs['oncoming'], inputs['left'])
 
         return state
 
@@ -150,10 +150,7 @@ class LearningAgent(Agent):
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
         Q = self.Q[state][action]
-        current_state = self.build_state()
-        self.createQ(current_state)
-        Q = Q + self.alpha * (reward + self.get_maxQ(current_state) - Q)
-
+        Q = Q + self.alpha * (reward  - Q)
         self.Q[state][action] = Q
         return
 
@@ -190,7 +187,7 @@ def run():
     #   learning   - set to True to force the driving agent to use Q-learning
     #    * epsilon - continuous value for the exploration factor, default is 1
     #    * alpha   - continuous value for the learning rate, default is 0.5
-    agent = env.create_agent(LearningAgent, learning = True, alpha = 0.1)
+    agent = env.create_agent(LearningAgent, learning = True, alpha = 0.75)
     
     ##############
     # Follow the driving agent
@@ -205,7 +202,7 @@ def run():
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
-    sim = Simulator(env, update_delay=1.0, log_metrics=True, optimized=True)
+    sim = Simulator(env, update_delay=0.001, log_metrics=True, optimized=True)
 
     ##############
     # Run the simulator
