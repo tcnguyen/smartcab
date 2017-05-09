@@ -67,8 +67,13 @@ class LearningAgent(Agent):
         ########### 
         ## TO DO ##
         ###########
-        # Set 'state' as a tuple of relevant data for the agent        
-        state = (waypoint, inputs['light'], inputs['oncoming'], inputs['left'])
+        # Set 'state' as a tuple of relevant data for the agent
+
+        state = (waypoint, inputs['light'], inputs['oncoming'], inputs['left'] == "forward")
+
+        # the only danger with cars on the left is where they are going forward
+        # if they turn left ==> danger if we go straight but in this case we should have red light
+        # if they turn right ==> never a danger
 
         return state
 
@@ -84,8 +89,7 @@ class LearningAgent(Agent):
 
         maxQ = None
         dict = self.Q[state]
-        max_action = max(dict, key=dict.get)
-        maxQ = dict[max_action]
+        maxQ = max(dict.values())
 
         return maxQ 
 
@@ -133,8 +137,15 @@ class LearningAgent(Agent):
                 action = self.valid_actions[random.randint(0, self.number_actions - 1)]
             else:
                 dict = self.Q[state]
-                max_action = max(dict, key=dict.get)
-                action = max_action
+                maxQ = max(dict.values())
+
+                # if multiple actions have same max value
+                # example: edge case: max() always gives first action with value = 0 and never updates, and the optimal action is the second or the third one
+
+                max_actions = [k for k, v in dict.iteritems() if v == maxQ]
+
+                # solution: choose random between max value actions if there are many
+                action = random.choice(max_actions)
  
         return action
 
@@ -149,9 +160,8 @@ class LearningAgent(Agent):
         ###########
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
-        Q = self.Q[state][action]
-        Q = Q + self.alpha * (reward  - Q)
-        self.Q[state][action] = Q
+
+        self.Q[state][action] += self.alpha * (reward  - self.Q[state][action])
         return
 
 
@@ -209,7 +219,7 @@ def run():
     # Flags:
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05 
     #   n_test     - discrete number of testing trials to perform, default is 0
-    sim.run(n_test=100, tolerance=0.0001)
+    sim.run(n_test=100, tolerance=0.00001)
 
 
 if __name__ == '__main__':
